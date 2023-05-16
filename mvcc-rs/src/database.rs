@@ -6,7 +6,7 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use parking_lot::Mutex;
 
 pub type Result<T> = std::result::Result<T, DatabaseError>;
 
@@ -157,7 +157,7 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// * `row` - the row object containing the values to be inserted.
     ///
     pub async fn insert(&self, tx_id: TxID, row: Row) -> Result<()> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.insert(tx_id, row).await
     }
 
@@ -202,7 +202,7 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// Returns `true` if the row was successfully deleted, and `false` otherwise.
     ///
     pub async fn delete(&self, tx_id: TxID, id: RowID) -> Result<bool> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.delete(tx_id, id).await
     }
 
@@ -221,17 +221,17 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// Returns `Some(row)` with the row data if the row with the given `id` exists,
     /// and `None` otherwise.
     pub async fn read(&self, tx_id: TxID, id: RowID) -> Result<Option<Row>> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.read(tx_id, id).await
     }
 
     pub async fn scan_row_ids(&self) -> Result<Vec<RowID>> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.scan_row_ids()
     }
 
     pub async fn scan_row_ids_for_table(&self, table_id: u64) -> Result<Vec<RowID>> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.scan_row_ids_for_table(table_id)
     }
 
@@ -241,7 +241,7 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// that you can use to perform operations within the transaction. All changes made within the
     /// transaction are isolated from other transactions until you commit the transaction.
     pub async fn begin_tx(&self) -> TxID {
-        let mut inner = self.inner.lock().await;
+        let mut inner = self.inner.lock();
         inner.begin_tx().await
     }
 
@@ -255,7 +255,7 @@ impl<Clock: LogicalClock> Database<Clock> {
     ///
     /// * `tx_id` - The ID of the transaction to commit.
     pub async fn commit_tx(&self, tx_id: TxID) -> Result<()> {
-        let mut inner = self.inner.lock().await;
+        let mut inner = self.inner.lock();
         inner.commit_tx(tx_id).await
     }
 
@@ -268,7 +268,7 @@ impl<Clock: LogicalClock> Database<Clock> {
     ///
     /// * `tx_id` - The ID of the transaction to abort.
     pub async fn rollback_tx(&self, tx_id: TxID) {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.rollback_tx(tx_id).await;
     }
 
@@ -277,12 +277,12 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// A version is considered unused if it is not visible to any active transaction
     /// and it is not the most recent version of the row.
     pub async fn drop_unused_row_versions(&self) {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.drop_unused_row_versions();
     }
 
     pub async fn recover(&self) -> Result<()> {
-        let inner = self.inner.lock().await;
+        let inner = self.inner.lock();
         inner.recover().await
     }
 }
