@@ -156,9 +156,9 @@ impl<Clock: LogicalClock> Database<Clock> {
     /// * `tx_id` - the ID of the transaction in which to insert the new row.
     /// * `row` - the row object containing the values to be inserted.
     ///
-    pub async fn insert(&self, tx_id: TxID, row: Row) -> Result<()> {
+    pub fn insert(&self, tx_id: TxID, row: Row) -> Result<()> {
         let inner = self.inner.lock();
-        inner.insert(tx_id, row).await
+        inner.insert(tx_id, row)
     }
 
     /// Updates a row in the database with new values.
@@ -183,7 +183,7 @@ impl<Clock: LogicalClock> Database<Clock> {
         if !self.delete(tx_id, row.id).await? {
             return Ok(false);
         }
-        self.insert(tx_id, row).await?;
+        self.insert(tx_id, row)?;
         Ok(true)
     }
 
@@ -298,7 +298,7 @@ pub struct DatabaseInner<Clock: LogicalClock> {
 }
 
 impl<Clock: LogicalClock> DatabaseInner<Clock> {
-    async fn insert(&self, tx_id: TxID, row: Row) -> Result<()> {
+    fn insert(&self, tx_id: TxID, row: Row) -> Result<()> {
         let mut txs = self.txs.borrow_mut();
         let tx = txs
             .get_mut(&tx_id)
@@ -635,7 +635,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -695,7 +695,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -773,7 +773,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -837,7 +837,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, row1.clone()).await.unwrap();
+        db.insert(tx1, row1.clone()).unwrap();
         let row2 = db
             .read(
                 tx1,
@@ -899,7 +899,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -952,7 +952,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, row1).await.unwrap();
+        db.insert(tx1, row1).unwrap();
 
         // T2 attempts to read row with ID 1, but doesn't see one because T1 has not committed.
         let tx2 = db.begin_tx().await;
@@ -984,7 +984,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         db.commit_tx(tx1).await.unwrap();
 
         // T2 deletes row with ID 1, but does not commit.
@@ -1030,7 +1030,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -1101,7 +1101,7 @@ mod tests {
             },
             data: "Hello".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         let row = db
             .read(
                 tx1,
@@ -1175,7 +1175,7 @@ mod tests {
             },
             data: "10".to_string(),
         };
-        db.insert(tx1, tx1_row.clone()).await.unwrap();
+        db.insert(tx1, tx1_row.clone()).unwrap();
         db.commit_tx(tx1).await.unwrap();
 
         // but I like more money, so let me try adding $10 more
@@ -1233,7 +1233,7 @@ mod tests {
             },
             data: "10".to_string(),
         };
-        db.insert(tx2, tx2_row.clone()).await.unwrap();
+        db.insert(tx2, tx2_row.clone()).unwrap();
 
         // transaction in progress, so tx1 shouldn't be able to see the value
         let row = db
@@ -1292,7 +1292,6 @@ mod tests {
                 data: "testme".to_string(),
             },
         )
-        .await
         .unwrap();
 
         db.commit_tx(tx1).await.unwrap();
@@ -1310,7 +1309,6 @@ mod tests {
                 data: "testme2".to_string(),
             },
         )
-        .await
         .unwrap();
         db.insert(
             tx4,
@@ -1322,7 +1320,6 @@ mod tests {
                 data: "testme3".to_string(),
             },
         )
-        .await
         .unwrap();
 
         assert_eq!(

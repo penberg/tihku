@@ -106,11 +106,11 @@ pub unsafe extern "C" fn MVCCDatabaseInsert(
             general_purpose::STANDARD.encode(value)
         }
     };
-    let (db, runtime) = (&db.db, &db.runtime);
+    let db = &db.db;
     let id = database::RowID { table_id, row_id };
     let row = database::Row { id, data };
     tracing::debug!("MVCCDatabaseInsert: {row:?}");
-    match runtime.block_on(async move { db.insert(tx_id, row).await }) {
+    match db.insert(tx_id, row) {
         Ok(_) => {
             tracing::debug!("MVCCDatabaseInsert: success");
             MVCCError::MVCC_OK

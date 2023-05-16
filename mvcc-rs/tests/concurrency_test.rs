@@ -30,7 +30,7 @@ fn test_non_overlapping_concurrent_inserts() {
                             id,
                             data: "Hello".to_string(),
                         };
-                        db.insert(tx, row.clone()).await.unwrap();
+                        db.insert(tx, row.clone()).unwrap();
                         db.commit_tx(tx).await.unwrap();
                         let tx = db.begin_tx().await;
                         let committed_row = db.read(tx, id).await.unwrap();
@@ -54,7 +54,7 @@ fn test_non_overlapping_concurrent_inserts() {
                             id,
                             data: "World".to_string(),
                         };
-                        db.insert(tx, row.clone()).await.unwrap();
+                        db.insert(tx, row.clone()).unwrap();
                         db.commit_tx(tx).await.unwrap();
                         let tx = db.begin_tx().await;
                         let committed_row = db.read(tx, id).await.unwrap();

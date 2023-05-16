@@ -76,7 +76,7 @@ fn bench(c: &mut Criterion) {
 
     let db = bench_db();
     let tx = futures::executor::block_on(db.begin_tx());
-    futures::executor::block_on(db.insert(
+    db.insert(
         tx,
         Row {
             id: RowID {
@@ -85,7 +85,7 @@ fn bench(c: &mut Criterion) {
             },
             data: "Hello".to_string(),
         },
-    ))
+    )
     .unwrap();
     group.bench_function("read", |b| {
         b.to_async(FuturesExecutor).iter(|| async {
@@ -103,7 +103,7 @@ fn bench(c: &mut Criterion) {
 
     let db = bench_db();
     let tx = futures::executor::block_on(db.begin_tx());
-    futures::executor::block_on(db.insert(
+    db.insert(
         tx,
         Row {
             id: RowID {
@@ -112,7 +112,7 @@ fn bench(c: &mut Criterion) {
             },
             data: "Hello".to_string(),
         },
-    ))
+    )
     .unwrap();
     group.bench_function("update", |b| {
         b.to_async(FuturesExecutor).iter(|| async {
